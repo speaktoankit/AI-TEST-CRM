@@ -50,9 +50,9 @@ googleProvider.addScope('https://www.googleapis.com/auth/gmail.compose');
 
 // Set custom parameters for Google Sign In
 googleProvider.setCustomParameters({
-  client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
   prompt: 'consent',
-  access_type: 'offline'
+  access_type: 'offline',
+  redirect_uri: 'https://aitestcrm.netlify.app/auth/callback'
 });
 
 // Export Firebase instances and auth functions
