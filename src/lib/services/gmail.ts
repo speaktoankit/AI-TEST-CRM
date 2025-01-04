@@ -1,6 +1,6 @@
 import { auth } from '../firebase';
 import type { Email } from '../types/email';
-import { GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { firebase } from '../firebase';
 
 const GMAIL_BASE_URL = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -43,17 +43,20 @@ export interface GmailResponse {
 export async function signInWithGmail(): Promise<void> {
   try {
     const provider = new GoogleAuthProvider();
+    
+    // Add required Gmail scopes
     provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
     provider.addScope('https://www.googleapis.com/auth/gmail.send');
     provider.addScope('https://www.googleapis.com/auth/gmail.modify');
     provider.addScope('https://www.googleapis.com/auth/gmail.compose');
     
+    // Set custom parameters
     provider.setCustomParameters({
       prompt: 'consent',
       access_type: 'offline'
     });
 
-    await firebase.signInWithRedirect(auth, provider);
+    await signInWithRedirect(auth, provider);
   } catch (error) {
     console.error('Error initiating Gmail sign-in:', error);
     throw error;
@@ -62,18 +65,26 @@ export async function signInWithGmail(): Promise<void> {
 
 export async function handleGmailRedirect(): Promise<GmailResponse> {
   try {
+    console.log('Handling Gmail redirect...');
     const result = await getRedirectResult(auth);
+    console.log('Redirect result:', result);
     
     if (!result) {
+      console.log('No redirect result found');
       return { success: false, error: 'No redirect result' };
     }
 
     const credential = GoogleAuthProvider.credentialFromResult(result);
+    console.log('Credential:', credential);
+    
     if (!credential) {
+      console.log('No credential found');
       return { success: false, error: 'No credentials returned' };
     }
 
     const token = credential.accessToken;
+    console.log('Access token:', token ? 'Present' : 'Missing');
+    
     if (!token) {
       return { success: false, error: 'No access token returned' };
     }

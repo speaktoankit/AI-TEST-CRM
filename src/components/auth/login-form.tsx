@@ -1,57 +1,55 @@
-import { useState, useEffect } from 'react';
-import { useAuthStore } from '../../lib/store/auth';
-import { signInWithGmail, handleGmailRedirect } from '../../lib/services/gmail';
-import { Mail } from 'lucide-react';
+import { useState } from 'react';
+import { signInWithGmail } from '../../lib/services/gmail';
 
 export function LoginForm() {
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuthStore();
-
-  useEffect(() => {
-    // Check for redirect result when component mounts
-    const checkRedirect = async () => {
-      try {
-        const response = await handleGmailRedirect();
-        if (response.success && response.token) {
-          await signIn(response.token, 'gmail');
-        } else if (response.error) {
-          setError(response.error);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      }
-    };
-    checkRedirect();
-  }, [signIn]);
 
   const handleGmailLogin = async () => {
-    setLoading(true);
-    setError(null);
     try {
+      setIsLoading(true);
+      setError(null);
       await signInWithGmail();
-      // The page will redirect to Google sign-in
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Failed to sign in with Gmail');
+      console.error('Gmail login error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col space-y-4 p-4">
-      <button
-        onClick={handleGmailLogin}
-        disabled={loading}
-        className="flex items-center justify-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        <Mail className="h-5 w-5" />
-        <span>{loading ? 'Redirecting to Gmail...' : 'Sign in with Gmail'}</span>
-      </button>
-      {error && (
-        <div className="text-sm text-red-600">
-          {error}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
         </div>
-      )}
+        
+        {error && (
+          <div className="rounded-md bg-red-50 p-4 mb-4">
+            <div className="text-sm text-red-700">{error}</div>
+          </div>
+        )}
+
+        <div className="mt-8 space-y-6">
+          <button
+            onClick={handleGmailLogin}
+            disabled={isLoading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <div className="animate-spin mr-2 h-4 w-4 border-b-2 border-white rounded-full" />
+                Signing in...
+              </div>
+            ) : (
+              'Sign in with Gmail'
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

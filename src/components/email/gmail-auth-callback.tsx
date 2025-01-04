@@ -11,15 +11,22 @@ export function GmailAuthCallback() {
   useEffect(() => {
     const handleAuth = async () => {
       try {
+        console.log('Starting Gmail auth callback...');
         const response = await handleGmailRedirect();
+        console.log('Gmail redirect response:', response);
+
         if (response.success && response.token) {
+          console.log('Successfully got token, signing in...');
           await signIn(response.token, 'gmail');
+          console.log('Sign in successful, navigating to /email');
           navigate('/email');
         } else {
+          console.error('Auth failed:', response.error);
           setError(response.error || 'Authentication failed');
           setTimeout(() => navigate('/login'), 3000);
         }
       } catch (err) {
+        console.error('Callback error:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
         setTimeout(() => navigate('/login'), 3000);
       }
