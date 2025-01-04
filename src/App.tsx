@@ -9,6 +9,7 @@ import Deals from './pages/deals';
 import Tasks from './pages/tasks';
 import Email from './pages/email';
 import Settings from './pages/settings';
+import { GmailAuthCallback } from './components/email/gmail-auth-callback';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, isInitialized } = useAuthStore();
@@ -47,22 +48,26 @@ function App() {
           element={!user ? <Login /> : <Navigate to="/dashboard" replace />} 
         />
         <Route
+          path="/auth/callback"
+          element={<GmailAuthCallback />}
+        />
+        <Route
           path="/*"
           element={
             <PrivateRoute>
               <div className="flex h-screen bg-gray-100">
                 <Sidebar />
-                <main className="flex-1 overflow-y-auto p-8">
+                <div className="flex-1 overflow-auto">
                   <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/contacts/*" element={<Contacts />} />
+                    <Route path="/contacts" element={<Contacts />} />
                     <Route path="/deals" element={<Deals />} />
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/email" element={<Email />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
-                </main>
+                </div>
               </div>
             </PrivateRoute>
           }

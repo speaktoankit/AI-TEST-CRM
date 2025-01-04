@@ -1,6 +1,6 @@
 import { auth } from '../firebase';
 import type { Email } from '../types/email';
-import { GoogleAuthProvider } from 'firebase/auth';
+import { GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
 import { firebase } from '../firebase';
 
 const GMAIL_BASE_URL = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -42,8 +42,18 @@ export interface GmailResponse {
 
 export async function signInWithGmail(): Promise<void> {
   try {
-    // Start the redirect flow
-    await firebase.signInWithRedirect(auth, firebase.googleProvider);
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+    provider.addScope('https://www.googleapis.com/auth/gmail.send');
+    provider.addScope('https://www.googleapis.com/auth/gmail.modify');
+    provider.addScope('https://www.googleapis.com/auth/gmail.compose');
+    
+    provider.setCustomParameters({
+      prompt: 'consent',
+      access_type: 'offline'
+    });
+
+    await firebase.signInWithRedirect(auth, provider);
   } catch (error) {
     console.error('Error initiating Gmail sign-in:', error);
     throw error;
@@ -52,7 +62,7 @@ export async function signInWithGmail(): Promise<void> {
 
 export async function handleGmailRedirect(): Promise<GmailResponse> {
   try {
-    const result = await firebase.getRedirectResult(auth);
+    const result = await getRedirectResult(auth);
     
     if (!result) {
       return { success: false, error: 'No redirect result' };
@@ -73,8 +83,7 @@ export async function handleGmailRedirect(): Promise<GmailResponse> {
     console.error('Error handling Gmail redirect:', error);
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Failed to complete Gmail sign-in',
-      token: null 
+      error: error instanceof Error ? error.message : 'Failed to complete Gmail sign-in' 
     };
   }
 }
